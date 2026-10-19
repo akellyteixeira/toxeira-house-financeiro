@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="Crie sua conta no ToxeiraHouse Financeiro."
+    >
+
+    <title>Criar conta | ToxeiraHouse Financeiro</title>
+
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/cadastro.css">
+
+    <script src="js/cadastro.js" defer></script>
+</head>
+
+<body>
+
+    <main class="cadastro-page">
+
+        <!-- Logo -->
+        <section class="logo-area">
+
+            <a href="index.html" aria-label="Voltar para o login">
+                <img
+                    src="assets/logo/Sem título.png"
+                    alt="ToxeiraHouse Financeiro"
+                    class="logo"
+                >
+            </a>
+
+        </section>
+
+        <!-- Formulário de cadastro -->
+        <section class="form-area">
+
+            <div class="cadastro-card">
+
+                <h1>Crie sua conta</h1>
+
+                <form id="cadastro-form">
+
+                    <!-- E-mail -->
+                    <div class="form-group">
+
+                        <label for="email">Seu e-mail*</label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            autocomplete="email"
+                            maxlength="254"
+                            required
+                        >
+
+                    </div>
+
+                    <!-- Senha -->
+                    <div class="form-group">
+
+                        <label for="password">Sua senha*</label>
+
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            autocomplete="new-password"
+                            minlength="8"
+                            maxlength="128"
+                            aria-describedby="password-help"
+                            required
+                        >
+
+                        <small id="password-help" class="password-help">
+                            Utilize pelo menos 8 caracteres.
+                        </small>
+
+                    </div>
+
+                    <!-- Botão de confirmação -->
+                    <button
+                        type="submit"
+                        class="confirm-button"
+                        id="confirm-button"
+                        aria-label="Criar minha conta"
+                    >
+
+                        <img
+                            src="assets/icons/check.png"
+                            alt=""
+                            class="confirm-icon"
+                        >
+
+                    </button>
+
+                    <!-- Mensagens da API -->
+                    <p
+                        id="cadastro-message"
+                        class="cadastro-message"
+                        role="status"
+                        aria-live="polite"
+                    ></p>
+
+                    <p class="login-link">
+                        Já tem uma conta?
+                        <a href="index.html">Faça login</a>
+                    </p>
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>

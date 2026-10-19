@@ -1,0 +1,322 @@
+
+/* ==========================
+   CADASTRO
+   Mesmo estilo do login
+========================== */
+
+/* Cartão de cadastro */
+
+.cadastro-card {
+    width: 100%;
+    max-width: 510px;
+
+    padding: 54px 64px;
+
+    background-color: var(--branco);
+    border-radius: 76px;
+
+    box-shadow: 0 10px 38px rgba(0, 0, 0, 0.13);
+}
+
+/* Título */
+
+.cadastro-card h1 {
+    color: var(--azul-escuro);
+
+    font-size: 30px;
+    font-weight: 400;
+
+    margin-bottom: 26px;
+}
+
+/* Campos */
+
+.cadastro-card .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    margin-bottom: 18px;
+}
+
+.cadastro-card .form-group label {
+    font-size: 18px;
+    color: var(--azul-escuro);
+}
+
+.cadastro-card .form-group input {
+    width: 100%;
+    height: 40px;
+
+    padding: 0 12px;
+
+    background-color: var(--cinza-campo);
+
+    border: 1px solid transparent;
+    border-radius: 11px;
+
+    outline: none;
+    transition: 0.2s;
+}
+
+.cadastro-card .form-group input:focus {
+    border-color: var(--azul-medio);
+
+    box-shadow: 0 0 0 3px rgba(66, 158, 189, 0.15);
+}
+
+/* Orientação sobre a senha */
+
+.password-help {
+    color: #66747a;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Botão de confirmação */
+
+.confirm-button {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 54px auto 0;
+
+    background-color: var(--laranja-escuro);
+
+    border: none;
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s,
+        transform 0.2s,
+        opacity 0.2s;
+}
+
+.confirm-button:hover {
+    background-color: var(--laranja);
+    transform: translateY(-2px);
+}
+
+.confirm-button:focus-visible {
+    outline: 3px solid var(--azul-medio);
+    outline-offset: 4px;
+}
+
+.confirm-button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+    transform: none;
+}
+
+/* Imagem PNG de confirmação */
+
+.confirm-icon {
+    width: 32px;
+    height: 32px;
+
+    object-fit: contain;
+}
+
+/* Mensagens do cadastro */
+
+.cadastro-message {
+    margin-top: 20px;
+
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+
+    overflow-wrap: anywhere;
+}
+
+.cadastro-message:empty {
+    display: none;
+}
+
+/* Link para voltar ao login */
+
+.login-link {
+    margin-top: 24px;
+
+    color: var(--azul-escuro);
+    font-size: 14px;
+    text-align: center;
+}
+
+.login-link a {
+    color: var(--azul-medio);
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.login-link a:hover {
+    color: var(--azul-escuro);
+    text-decoration: underline;
+}
+
+/* ==========================
+   TABLETS
+========================== */
+
+@media (max-width: 900px) {
+
+    .cadastro-card {
+        padding: 42px 38px;
+        border-radius: 52px;
+    }
+
+    .cadastro-card h1 {
+        font-size: 25px;
+    }
+
+}
+
+/* ==========================
+   CELULARES
+========================== */
+
+@media (max-width: 650px) {
+
+    .cadastro-card {
+        width: 100%;
+        max-width: 430px;
+
+        padding: 34px 26px 30px;
+
+        border-radius: 44px;
+    }
+
+    .cadastro-card h1 {
+        font-size: 21px;
+        margin-bottom: 18px;
+    }
+
+    .cadastro-card .form-group {
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .cadastro-card .form-group label {
+        font-size: 14px;
+    }
+
+    .cadastro-card .form-group input {
+        height: 36px;
+        border-radius: 8px;
+    }
+
+    .confirm-button {
+        width: 46px;
+        height: 46px;
+        margin-top: 40px;
+    }
+
+    .confirm-icon {
+        width: 26px;
+        height: 26px;
+    }
+
+    .cadastro-message {
+        font-size: 12px;
+    }
+
+    .login-link {
+        margin-top: 20px;
+        font-size: 12px;
+    }
+
+}
+
+/* Celulares estreitos */
+
+@media (max-width: 360px) {
+
+    .cadastro-card {
+        padding-right: 21px;
+        padding-left: 21px;
+
+        border-radius: 36px;
+    }
+
+}
+
+/* ==========================
+   CADASTRO COM LOGO À ESQUERDA
+========================== */
+
+.cadastro-page {
+    min-height: 100vh;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+
+    gap: 50px;
+    padding: 40px 5.5%;
+}
+
+.cadastro-page .logo-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-height: auto;
+    margin-bottom: 0;
+}
+
+.cadastro-page .logo {
+    display: block;
+    width: 100%;
+    max-width: 440px;
+    height: auto;
+    object-fit: contain;
+}
+
+.cadastro-page .form-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+/* Mantém o layout lado a lado em telas maiores */
+
+@media (min-width: 651px) {
+    .cadastro-page {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Em celulares, mantém o comportamento responsivo */
+
+@media (max-width: 650px) {
+    .cadastro-page {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+
+        gap: 0;
+        padding: 48px 18px 32px;
+    }
+
+    .cadastro-page .logo-area {
+        width: 100%;
+        min-height: 132px;
+        margin-bottom: 34px;
+    }
+
+    .cadastro-page .logo {
+        width: 84%;
+        max-width: 290px;
+    }
+}
