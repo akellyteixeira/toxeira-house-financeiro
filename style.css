@@ -1,0 +1,400 @@
+
+/* ==========================
+   CONFIGURAÇÕES GERAIS
+========================== */
+
+:root {
+    --azul-claro: #9fe7f5;
+    --azul-medio: #429ebd;
+    --azul-escuro: #053f5c;
+    --laranja: #f7ad19;
+    --laranja-escuro: #f27f0c;
+    --cinza-campo: #f1f1f1;
+    --branco: #ffffff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    background-color: var(--branco);
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--azul-escuro);
+}
+
+button,
+input {
+    font: inherit;
+}
+
+
+/* ==========================
+   LAYOUT PRINCIPAL
+========================== */
+
+.login-page {
+    min-height: 100vh;
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+
+    padding: 40px 5.5%;
+    gap: 50px;
+}
+
+
+/* ==========================
+   LOGO
+========================== */
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo {
+    display: block;
+    width: 100%;
+    max-width: 440px;
+    height: auto;
+    object-fit: contain;
+}
+
+
+/* ==========================
+   ÁREA DO FORMULÁRIO
+========================== */
+
+.form-area {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 510px;
+
+    padding: 54px 64px;
+
+    background-color: var(--branco);
+    border-radius: 76px;
+
+    box-shadow: 0 10px 38px rgba(0, 0, 0, 0.13);
+}
+
+
+/* Título */
+
+.login-card h1 {
+    color: var(--azul-escuro);
+
+    font-size: 30px;
+    font-weight: 400;
+
+    margin-bottom: 26px;
+}
+
+
+/* ==========================
+   CAMPOS DO FORMULÁRIO
+========================== */
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    font-size: 18px;
+    color: var(--azul-escuro);
+}
+
+.form-group input {
+    width: 100%;
+    height: 40px;
+
+    padding: 0 12px;
+
+    background-color: var(--cinza-campo);
+
+    border: 1px solid transparent;
+    border-radius: 11px;
+
+    outline: none;
+
+    transition: 0.2s;
+}
+
+.form-group input:focus {
+    border-color: var(--azul-medio);
+    box-shadow: 0 0 0 3px rgba(66, 158, 189, 0.15);
+}
+
+
+/* ==========================
+   LEMBRAR-ME
+========================== */
+
+.remember-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin-top: 23px;
+}
+
+.remember-area input {
+    width: 18px;
+    height: 18px;
+
+    accent-color: var(--azul-medio);
+    cursor: pointer;
+}
+
+.remember-area label {
+    font-size: 14px;
+    cursor: pointer;
+}
+
+
+/* ==========================
+   BOTÃO ENTRAR
+========================== */
+
+.login-button {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin: 24px auto 0;
+
+    background-color: var(--laranja-escuro);
+
+    border: none;
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s,
+        transform 0.2s;
+}
+
+.login-button:hover {
+    background-color: var(--laranja);
+    transform: translateY(-2px);
+}
+
+.login-button:focus-visible {
+    outline: 3px solid var(--azul-medio);
+    outline-offset: 4px;
+}
+
+
+/* Imagem da seta */
+
+.arrow-icon {
+    width: 32px;
+    height: 32px;
+
+    object-fit: contain;
+}
+
+
+/* ==========================
+   LINK CRIAR CONTA
+========================== */
+
+.register-area {
+    text-align: center;
+    margin-top: 32px;
+}
+
+.register-area a {
+    color: var(--azul-medio);
+
+    font-size: 15px;
+    font-weight: bold;
+
+    text-decoration: none;
+}
+
+.register-area a:hover {
+    color: var(--azul-escuro);
+    text-decoration: underline;
+}
+
+
+/* ==========================
+   TABLETS
+========================== */
+
+@media (max-width: 900px) {
+
+    .login-page {
+        gap: 28px;
+        padding: 32px;
+    }
+
+    .logo {
+        max-width: 340px;
+    }
+
+    .login-card {
+        padding: 42px 38px;
+        border-radius: 52px;
+    }
+
+    .login-card h1 {
+        font-size: 25px;
+    }
+
+}
+
+
+/* ==========================
+   CELULARES
+========================== */
+
+@media (max-width: 650px) {
+
+    .login-page {
+        min-height: 100vh;
+
+        display: flex;
+        flex-direction: column;
+
+        justify-content: flex-start;
+        align-items: center;
+
+        gap: 0;
+
+        padding: 48px 18px 32px;
+    }
+
+    /* Logo centralizada acima do formulário */
+
+    .logo-area {
+        width: 100%;
+        min-height: 132px;
+
+        margin-bottom: 34px;
+    }
+
+    .logo {
+        width: 84%;
+        max-width: 290px;
+    }
+
+    /* Cartão de login */
+
+    .form-area {
+        width: 100%;
+    }
+
+    .login-card {
+        width: 100%;
+        max-width: 430px;
+
+        padding: 34px 26px 30px;
+
+        border-radius: 44px;
+    }
+
+    .login-card h1 {
+        font-size: 21px;
+        margin-bottom: 18px;
+    }
+
+    /* Campos */
+
+    .form-group {
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .form-group label {
+        font-size: 14px;
+    }
+
+    .form-group input {
+        height: 36px;
+        border-radius: 8px;
+    }
+
+    /* Lembrar-me */
+
+    .remember-area {
+        gap: 9px;
+        margin-top: 17px;
+    }
+
+    .remember-area input {
+        width: 15px;
+        height: 15px;
+    }
+
+    .remember-area label {
+        font-size: 11px;
+    }
+
+    /* Botão */
+
+    .login-button {
+        width: 46px;
+        height: 46px;
+        margin-top: 16px;
+    }
+
+    .arrow-icon {
+        width: 26px;
+        height: 26px;
+    }
+
+    /* Criar conta */
+
+    .register-area {
+        margin-top: 21px;
+    }
+
+    .register-area a {
+        font-size: 12px;
+    }
+
+}
+
+
+/* ==========================
+   CELULARES PEQUENOS
+========================== */
+
+@media (max-width: 360px) {
+
+    .login-page {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .login-card {
+        padding-left: 21px;
+        padding-right: 21px;
+
+        border-radius: 36px;
+    }
+
+}
