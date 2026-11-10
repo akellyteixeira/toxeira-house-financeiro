@@ -52,7 +52,23 @@ class ReadEditDB:
                 st.rerun()
         except Exception as e:
             st.error(f"Erro ao ajutar status: {e}")
-    
+
+    def excluir_registro(_self, table,database, cod_transacao):
+        query= text(f"""
+        DELETE FROM {database}.{table}
+        WHERE ID_TRANSACAO = :cod_transacao
+        """)
+        try:
+            with _self.engine.begin() as conn:
+                conn.execute(query,{
+                    "cod_transacao":cod_transacao})
+                conn.commit()
+                st.toast(f"✅ Registro {cod_transacao} excluido com sucesso!")
+                st.rerun()
+        except Exception as e:
+            st.error(f"Erro ao excluir registro: {e}")
+
+            
     def usuarios_read(_self, database, table):
         query = f"""
         SELECT *
@@ -97,12 +113,12 @@ class ReadEditDB:
  
 
             
-    def denuncia_read(_self, database, table, codigo):
+    def orc_read(_self, database, table, mesano_filtro):
         query = f"""
         SELECT *
         FROM {database}.{table}
         WHERE 1=1
-        AND CODIGO = '{codigo}'
+        AND MESANO_VIGENCIA = {mesano_filtro}
         """
         try:
             with _self.engine.connect() as conn:
@@ -111,11 +127,11 @@ class ReadEditDB:
             if not df.empty:
                 return df
             else:                
-                st.error("Denuncia não encontrada")
+                # st.error(f"Tabela {table} não encontrada")
                 time.sleep(1)
                 return pd.DataFrame()
         except Exception as e:
-            print(f"Erro na consulta da denuncia: {e}")
+            print(f"Erro na consulta da tabela {table}: {e}")
             return pd.DataFrame()
         
     @st.cache_data
@@ -132,7 +148,7 @@ class ReadEditDB:
             if not df.empty:
                 return df
             else:                
-                st.error(f"Tabela {table} não encontrada")
+                # st.error(f"Tabela {table} não encontrada")
                 time.sleep(1)
                 return pd.DataFrame()
         except Exception as e:
@@ -155,7 +171,7 @@ class ReadEditDB:
             if not df.empty:
                 return df
             else:                
-                st.error(f"Tabela {table} não encontrada")
+                # st.error(f"Tabela {table} não encontrada")
                 time.sleep(1)
                 return pd.DataFrame()
         except Exception as e:
@@ -177,7 +193,7 @@ class ReadEditDB:
                         if_exists='append',
                         index=False
                     )
-                st.toast(f"✅ Movimentação registrada com sucesso")
+                st.toast("✅ Movimentação registrada com sucesso")
         except IntegrityError as e:
             st.error(f"Erro na gravação da denuncia: {e.orig}")
             print(f"Erro na gravação da denuncia: {e.orig}")
@@ -200,7 +216,7 @@ class ReadEditDB:
                         if_exists='append',
                         index=False
                     )
-                st.toast(f"✅ Usuario registrado com sucesso")
+                st.toast("✅ Usuario registrado com sucesso")
         except IntegrityError as e:
             st.error(f"Erro ao registrar Usuario: {e.orig}")
             print(f"Erro ao registrar Usuario:  {e.orig}")

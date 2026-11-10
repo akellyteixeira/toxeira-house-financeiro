@@ -65,7 +65,6 @@ CONFIG_DB = ReadEditDB(engine=engine)
 aut_enviar_denuncia = True
 df_upload = pd.DataFrame()
 
-
 df_status = CONFIG_DB.geral_read(database=database,
                                  table='STATUS')
 
@@ -109,7 +108,11 @@ try:
     df_movimentacoes_mes_atual = df_movimentacoes_mes_atual[['ID_TRANSACAO','DATA_PAGAMENTO','DESCRICAO_TIPO_MOV',
                                                              'ORIGEM_MOV','DESCRICAO_STATUS','CATEGORIA','OBS','VALOR_PAGO']]
 
+except Exception as e:
+    df_movimentacoes_mes_atual = pd.DataFrame()
 
+
+try:
     df_creditos_mes_atual = CONFIG_DB.mov_read(database=database,
                                            table='FATO_CREDITO',
                                            mes_filtro=datetime.now().month,
@@ -119,18 +122,22 @@ try:
     df_creditos_mes_atual = df_creditos_mes_atual.merge(df_cadastro_credito, on='COD_CREDITO',how='left')
     df_creditos_mes_atual = df_creditos_mes_atual[['ID_TRANSACAO','DATA_PAGAMENTO','DESCRICAO_CREDITO',
                                                    'VALOR_PAGO','VALOR_LIBERADO','OBS']]
-
-
-
-
-
-
-
 except Exception as e:
-    # st.info(e)
-    df_movimentacoes_mes_atual = pd.DataFrame()
     df_creditos_mes_atual = pd.DataFrame()
 
+
+try:
+    df_orcamento_mes_atual = CONFIG_DB.orc_read(database=database,
+                                                table='FATO_ORCAMENTO',
+                                                mesano_filtro=((datetime.now().year)*100)+(datetime.now().month)
+                                                )
+
+    df_orcamento_mes_atual = df_orcamento_mes_atual.merge(df_categoria_saidas, on='COD_CATEGORIA',how='left')
+    df_orcamento_mes_atual = df_orcamento_mes_atual[['ID_TRANSACAO','DESCRICAO_SAIDAS','VALOR_ORCAMENTO','OBS']]
+    df_orcamento_mes_atual = df_orcamento_mes_atual.rename(columns={'DESCRICAO_SAIDAS':'CATEGORIA'})
+    
+except Exception as e:
+    df_orcamento_mes_atual = pd.DataFrame()
 
 
 ## VARIAVEIS PARA MANTER O SITE FUNCIONANDO ANTES DE SUBIR AS PLANILHAS
@@ -254,6 +261,15 @@ with container_principal:
         if categoria:
             df_upload.loc[0, 'COD_CATEGORIA'] = df_categoria_entrada[df_categoria_entrada['DESCRICAO_ENTRADAS'] == categoria]['COD_CATEGORIA'].iloc[0]
 
+    elif tipo == 'Orçamento':
+        categoria = categoria_mov.selectbox(label = "**Categoria:**",
+                                            placeholder = "Sel. a categoria",
+                                            options = df_categoria_saidas['DESCRICAO_SAIDAS'],
+                                            index = None)
+        if categoria:
+            df_upload.loc[0, 'COD_CATEGORIA']  = df_categoria_saidas[df_categoria_saidas['DESCRICAO_SAIDAS'] == categoria]['COD_CATEGORIA'].iloc[0]
+
+
 
     with botao_registrar_col:
         botao_registrar = st.button('Cadastrar',
@@ -267,6 +283,14 @@ with container_principal:
                 CONFIG_DB.upload_msql_df(df=df_upload,
                                         table='FATO_CREDITO',
                                         database=database)
+            elif tipo == 'Orçamento':
+                df_upload = df_upload.rename(columns={'VALOR_PAGO':'VALOR_ORCAMENTO'})
+                df_upload['MESANO_VIGENCIA'] = ((df_upload['DATA_PAGAMENTO'].dt.year)*100)+(df_upload['DATA_PAGAMENTO'].dt.month)
+                df_upload = df_upload.drop(columns=['DATA_PAGAMENTO'])
+                CONFIG_DB.upload_msql_df(df=df_upload,
+                                        table='FATO_ORCAMENTO',
+                                        database=database)
+
             else:
                 CONFIG_DB.upload_msql_df(df=df_upload,
                                         table='FATO_MOV',
@@ -276,7 +300,99 @@ with container_principal:
  
             time.sleep(1)
             st.rerun()
+    
+
 
     with texto:
-        st.dataframe(df_movimentacoes_mes_atual)
-        st.dataframe(df_creditos_mes_atual)
+        st.divider()
+        container_df_principal  = st.container(border = True)
+        st.divider()
+        container_df_secundario = st.container(border = True)
+        st.divider()
+        container_df_orcamento  = st.container(border = True)
+        
+        with container_df_principal:
+            _,titulo,_ = st.columns([1,5,1])
+
+           
+            def codigo_get ():
+                    st.session_state.codigo = df_movimentacoes_mes_atual['ID_TRANSACAO'].iloc[st.session_state.get("botao_excluir").get("row")]
+                    CONFIG_DB.excluir_registro(table='FATO_MOV',
+                                           database=database,
+                                           cod_transacao=st.session_state.codigo)
+                    return st.session_state.codigo 
+
+
+            titulo.markdown(f"### **MOVIMENTAÇÕES MÊS ATUAL ({datetime.now().month}/{datetime.now().year}):**",text_alignment='center')
+            df_modificar_mes = df_movimentacoes_mes_atual.copy()
+            df_modificar_mes['EXCLUIR'] = "⚙  Excluir"
+
+            condicoes = [
+                df_modificar_mes['DESCRICAO_TIPO_MOV'] == 'Saida',
+                df_modificar_mes['DESCRICAO_TIPO_MOV'] == 'Entrada'
+                ]
+
+            opcoes_tipo = ['🔴 Saida', '🟢 Entrada']
+
+            df_modificar_mes['DESCRICAO_TIPO_MOV'] = np.select(
+                condicoes,
+                opcoes_tipo,
+                default=df_modificar_mes['DESCRICAO_TIPO_MOV']
+            )
+
+            df = st.data_editor(df_modificar_mes,
+                                hide_index = True,
+                                column_config={
+                                 "EXCLUIR": st.column_config.ButtonColumn("EXCLUIR",
+                                                                          type='primary',
+                                                                          on_click=codigo_get,
+                                                                          key="botao_excluir")})
+        
+        with container_df_secundario:
+            _,titulo,_ = st.columns([1,5,1])
+            def codigo_get ():
+                    st.session_state.codigo = df_creditos_mes_atual['ID_TRANSACAO'].iloc[st.session_state.get("botao_excluir_2").get("row")]
+                    CONFIG_DB.excluir_registro(table='FATO_CREDITO',
+                                           database=database,
+                                           cod_transacao=st.session_state.codigo)
+                    return st.session_state.codigo 
+
+
+            titulo.markdown(f"### **MOVIMENTAÇÕES CREDITO MÊS ATUAL ({datetime.now().month}/{datetime.now().year}):**",text_alignment='center')
+            df_modificar_mes = df_creditos_mes_atual.copy()
+            df_modificar_mes['EXCLUIR'] = "⚙  Excluir"
+
+            df = st.data_editor(df_modificar_mes,
+                                hide_index = True,
+                                key='data_credito',
+                                column_config={
+                                 "EXCLUIR": st.column_config.ButtonColumn("EXCLUIR",
+                                                                          type='primary',
+                                                                          on_click=codigo_get,
+                                                                          key="botao_excluir_2")})
+
+        with container_df_orcamento:
+            print(df_orcamento_mes_atual)
+            _,titulo,_ = st.columns([1,5,1])
+            def codigo_get ():
+                    st.session_state.codigo = df_orcamento_mes_atual['ID_TRANSACAO'].iloc[st.session_state.get("botao_excluir_3").get("row")]
+                    CONFIG_DB.excluir_registro(table='FATO_ORCAMENTO',
+                                           database=database,
+                                           cod_transacao=st.session_state.codigo)
+                    return st.session_state.codigo 
+
+
+            titulo.markdown(f"### **ORÇAMENTOS MÊS ATUAL ({datetime.now().month}/{datetime.now().year}):**",text_alignment='center')
+            df_modificar_mes = df_orcamento_mes_atual.copy()
+            df_modificar_mes['EXCLUIR'] = "⚙  Excluir"
+
+            df = st.data_editor(df_modificar_mes,
+                                key='data_orcamento',
+                                hide_index = True,
+                                column_config={
+                                 "EXCLUIR": st.column_config.ButtonColumn("EXCLUIR",
+                                                                          type='primary',
+                                                                          on_click=codigo_get,
+                                                                          key="botao_excluir_3")})
+
+    # st.dataframe(df_upload)
