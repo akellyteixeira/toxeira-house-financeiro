@@ -14,19 +14,49 @@ load_dotenv(override=True)
 
 
 
-# if not st.session_state.get("codigo", False):
-#     st.error("⛔ Acesso negado. Você precisa criar uma nova denunciar ou utilizar o código anotado para consultar o status da denuncia aberta.")
-#     st.stop()
-#
+if not st.session_state.get("autenticado", False):
+    st.error("⛔ Acesso negado. Você precisa criar uma nova denunciar ou utilizar o código anotado para consultar o status da denuncia aberta.")
+    st.stop()
+
 
 
 logo_completo = r'C:\Users\Higor Rodrigues\Desktop\PROJETOS\FINANCEIRO_PAINEL\toxeira-house-financeiro\assets\logo\Sem título.png'
 logo_b64 = carregar_imagem_local(logo_completo)
 
 
+st.markdown("""
+    <style>
+        /* CSS para as Métricas */
+        [data-testid="stMetric"] {
+            background-color: #ffffff !important;
+            border-radius: 15px 45px!important;
+            box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.08) !important;
+            padding: 15px 20px !important;
+            border: 1px solid #f0f2f6 !important;
+            border-top: 4px solid #eb5c40 !important;
+            color: #053f5c !important;
+
+        }
+
+        /* CSS Mágico para Containers Específicos */
+        div[class*="st-key-table"] {
+            background-color: #ffffff !important;
+            border-radius: 15px !important;
+            box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.08) !important;
+            border: 1px solid #f0f2f6 !important;
+            color: #053f5c !important;
+            padding: 20px !important;
+            
+            /* Garante que o padding não faça o container vazar da tela */
+            box-sizing: border-box !important; 
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+
 html_cabecalho = f"""
 <div style="text-align: center; margin-top: 20px; margin-bottom: 30px; font-family: sans-serif;">    
-    <img src="data:image/png;base64,{logo_b64}" width="300" stylie="margin-bottom: 15px;">
+    <img src="data:image/png;base64,{logo_b64}" width="350" stylie="margin-bottom: 15px;">
     <h4 style="color: #2c3e50; 
         margin: 0; 
         letter-spacing: 1px;
@@ -60,6 +90,12 @@ database = 'financeiro'
 engine = iniciar_conexao()
 CONFIG_DB = ReadEditDB(engine=engine)
 
+st.sidebar.markdown(f'''Usuario Logado:
+                    **{CONFIG_DB.usuarios_read_login(database='financeiro',
+                                                         table='USERS',
+                                                         usuario=st.session_state.get("usuario_logado")
+                                                         )['NOME'].iloc[0]}**''')
+
 
 ## VARIAVEIS GLOBAIS .ENV ##
 aut_enviar_denuncia = True
@@ -83,12 +119,35 @@ df_tipo_pagamento =     CONFIG_DB.geral_read(database=database,
 
 df_tipo_movimento =     CONFIG_DB.geral_read(database=database,
                                              table='TIPO_MOVIMENTACAO')
-try:
-    df_movimentacoes_mes_atual = CONFIG_DB.mov_read(database=database,
+
+df_movimentacoes_mes_atual = CONFIG_DB.mov_read(database=database,
                                                 table='FATO_MOV',
                                                 mes_filtro=datetime.now().month,
                                                 ano_filtro=datetime.now().year,
                                                 )
+df_orcamento_mes_atual = CONFIG_DB.orc_read(database=database,
+                                                table='FATO_ORCAMENTO',
+                                                mesano_filtro=((datetime.now().year)*100)+(datetime.now().month)
+                                                )
+df_creditos_mes_atual = CONFIG_DB.mov_read(database=database,
+                                    table='FATO_CREDITO',
+                                    mes_filtro=datetime.now().month,
+                                    ano_filtro=datetime.now().year,
+                                    )
+
+
+colunas_chaves = ['COD_STATUS', 'COD_CATEGORIA', 'COD_TIPO', 'COD_TIPO_MOV', 'COD_CREDITO']
+
+for df in [df_movimentacoes_mes_atual, df_creditos_mes_atual, df_orcamento_mes_atual, 
+           df_status, df_categoria_entrada, df_categoria_saidas, df_cadastro_credito, df_tipo_pagamento, df_tipo_movimento]:
+    if df is not None and not df.empty:
+        for col in colunas_chaves:
+            if col in df.columns:
+                # Substitui espaços em branco vazios por NaN antes de converter para evitar o erro
+                df[col] = df[col].replace(r'^\s*$', float('nan'), regex=True)
+                df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
+
+try:
     df_movimentacoes_mes_atual = df_movimentacoes_mes_atual.merge(df_status, on='COD_STATUS', how='left')
     df_movimentacoes_mes_atual = df_movimentacoes_mes_atual.merge(df_categoria_entrada, on='COD_CATEGORIA', how='left')
     df_movimentacoes_mes_atual = df_movimentacoes_mes_atual.merge(df_categoria_saidas, on='COD_CATEGORIA', how='left')
@@ -96,48 +155,44 @@ try:
     df_movimentacoes_mes_atual = df_movimentacoes_mes_atual.merge(df_tipo_movimento, on='COD_TIPO_MOV', how='left')
     df_movimentacoes_mes_atual = df_movimentacoes_mes_atual.merge(df_cadastro_credito,on='COD_CREDITO',how='left')
     
-    df_movimentacoes_mes_atual = df_movimentacoes_mes_atual.fillna(" ")
+    # df_movimentacoes_mes_atual = df_movimentacoes_mes_atual.fillna(" ")
     df_movimentacoes_mes_atual['CATEGORIA'] = np.where(df_movimentacoes_mes_atual['COD_TIPO_MOV'] == 1,   # Condição
-                                                       df_movimentacoes_mes_atual['DESCRICAO_ENTRADAS'],  # Valor se for Verdadeiro
-                                                       df_movimentacoes_mes_atual['DESCRICAO_SAIDAS'])    # Valor se for Falso
- 
-    df_movimentacoes_mes_atual['ORIGEM_MOV'] = np.where(df_movimentacoes_mes_atual['COD_TIPO_MOV'] == 2,   # Condição
-                                                        df_movimentacoes_mes_atual['DESCRICAO_TIPO']+' - '+df_movimentacoes_mes_atual['DESCRICAO_CREDITO'],  # Valor se for Verdadeiro
-                                                        df_movimentacoes_mes_atual['DESCRICAO_TIPO'])    # Valor se for Falso
+                                                    df_movimentacoes_mes_atual['DESCRICAO_ENTRADAS'],  # Valor se for Verdadeiro
+                                                    df_movimentacoes_mes_atual['DESCRICAO_SAIDAS'])    # Valor se for Falso
+    tipo = df_movimentacoes_mes_atual['DESCRICAO_TIPO'].fillna("").astype(str)
+    credito = df_movimentacoes_mes_atual['DESCRICAO_CREDITO'].fillna("").astype(str)
+
+    df_movimentacoes_mes_atual['ORIGEM_MOV'] = np.where(df_movimentacoes_mes_atual['COD_TIPO_MOV'] == 2,
+                                                        tipo + ' - ' + credito,
+                                                        tipo)
 
     df_movimentacoes_mes_atual = df_movimentacoes_mes_atual[['ID_TRANSACAO','DATA_PAGAMENTO','DESCRICAO_TIPO_MOV',
-                                                             'ORIGEM_MOV','DESCRICAO_STATUS','CATEGORIA','OBS','VALOR_PAGO']]
+                                                            'ORIGEM_MOV','DESCRICAO_STATUS','CATEGORIA','OBS','VALOR_PAGO']]
 
 except Exception as e:
+    # print(f'1 - {e}')
     df_movimentacoes_mes_atual = pd.DataFrame()
 
 
 try:
-    df_creditos_mes_atual = CONFIG_DB.mov_read(database=database,
-                                           table='FATO_CREDITO',
-                                           mes_filtro=datetime.now().month,
-                                          ano_filtro=datetime.now().year,
-                                          )
     df_creditos_mes_atual = df_creditos_mes_atual.merge(df_status, on='COD_STATUS', how='left')
     df_creditos_mes_atual = df_creditos_mes_atual.merge(df_cadastro_credito, on='COD_CREDITO',how='left')
     df_creditos_mes_atual = df_creditos_mes_atual[['ID_TRANSACAO','DATA_PAGAMENTO','DESCRICAO_CREDITO',
-                                                   'VALOR_PAGO','VALOR_LIBERADO','OBS']]
+                                                'VALOR_PAGO','VALOR_LIBERADO','OBS']]
 except Exception as e:
+    # print(f'2 - {e}')
     df_creditos_mes_atual = pd.DataFrame()
 
 
 try:
-    df_orcamento_mes_atual = CONFIG_DB.orc_read(database=database,
-                                                table='FATO_ORCAMENTO',
-                                                mesano_filtro=((datetime.now().year)*100)+(datetime.now().month)
-                                                )
-
     df_orcamento_mes_atual = df_orcamento_mes_atual.merge(df_categoria_saidas, on='COD_CATEGORIA',how='left')
     df_orcamento_mes_atual = df_orcamento_mes_atual[['ID_TRANSACAO','DESCRICAO_SAIDAS','VALOR_ORCAMENTO','OBS']]
     df_orcamento_mes_atual = df_orcamento_mes_atual.rename(columns={'DESCRICAO_SAIDAS':'CATEGORIA'})
-    
+
 except Exception as e:
+    # print(f'3 - {e}')
     df_orcamento_mes_atual = pd.DataFrame()
+
 
 
 ## VARIAVEIS PARA MANTER O SITE FUNCIONANDO ANTES DE SUBIR AS PLANILHAS
@@ -164,7 +219,7 @@ st.set_page_config(
 _,titulo,_ = st.columns([1,1,1])
 titulo.html(html_cabecalho)
 
-container_principal = st.container(border=True,
+container_principal = st.container(border=False,
                                 horizontal = False,
                                 )
 
@@ -172,8 +227,8 @@ with container_principal:
 
     _,texto,_ = st.columns([1,5,1])
  
-    tipo_mov,data_do_pagamento,categoria_mov,tipo_mov_pag, status, botao_registrar_col = texto.columns([1,1,1,1,1,1], vertical_alignment="bottom")
-    valor,credito,obs_colum = texto.columns([1,1,4], vertical_alignment="bottom") 
+    tipo_mov,data_do_pagamento,categoria_mov,tipo_mov_pag, status = texto.columns([1,1,1,1,1], vertical_alignment="bottom")
+    valor,credito,obs_colum,botao_registrar_col = texto.columns([1,1,3,1], vertical_alignment="bottom") 
 
     tipo = tipo_mov.selectbox(label = "**Tipo:***",
                               placeholder = "Sel. o tipo",
@@ -305,11 +360,11 @@ with container_principal:
 
     with texto:
         st.divider()
-        container_df_principal  = st.container(border = True)
+        container_df_principal  = st.container(border = True, key='table_1')
         st.divider()
-        container_df_secundario = st.container(border = True)
+        container_df_secundario = st.container(border = True, key='table_2')
         st.divider()
-        container_df_orcamento  = st.container(border = True)
+        container_df_orcamento  = st.container(border = True, key='table_3')
         
         with container_df_principal:
             _,titulo,_ = st.columns([1,5,1])
@@ -325,20 +380,22 @@ with container_principal:
 
             titulo.markdown(f"### **MOVIMENTAÇÕES MÊS ATUAL ({datetime.now().month}/{datetime.now().year}):**",text_alignment='center')
             df_modificar_mes = df_movimentacoes_mes_atual.copy()
-            df_modificar_mes['EXCLUIR'] = "⚙  Excluir"
 
-            condicoes = [
-                df_modificar_mes['DESCRICAO_TIPO_MOV'] == 'Saida',
-                df_modificar_mes['DESCRICAO_TIPO_MOV'] == 'Entrada'
+            if 'DESCRICAO_TIPO_MOV' in df_modificar_mes.columns:
+                condicoes = [
+                    df_modificar_mes['DESCRICAO_TIPO_MOV'] == 'Saida',
+                    df_modificar_mes['DESCRICAO_TIPO_MOV'] == 'Entrada'
                 ]
 
-            opcoes_tipo = ['🔴 Saida', '🟢 Entrada']
+                opcoes_tipo = ['🔴 Saida', '🟢 Entrada']
 
-            df_modificar_mes['DESCRICAO_TIPO_MOV'] = np.select(
-                condicoes,
-                opcoes_tipo,
-                default=df_modificar_mes['DESCRICAO_TIPO_MOV']
-            )
+                df_modificar_mes['DESCRICAO_TIPO_MOV'] = np.select(
+                    condicoes,
+                    opcoes_tipo,
+                    default=df_modificar_mes['DESCRICAO_TIPO_MOV']
+                )
+
+            df_modificar_mes['EXCLUIR'] = "⚙  Excluir"
 
             df = st.data_editor(df_modificar_mes,
                                 hide_index = True,
@@ -372,7 +429,6 @@ with container_principal:
                                                                           key="botao_excluir_2")})
 
         with container_df_orcamento:
-            print(df_orcamento_mes_atual)
             _,titulo,_ = st.columns([1,5,1])
             def codigo_get ():
                     st.session_state.codigo = df_orcamento_mes_atual['ID_TRANSACAO'].iloc[st.session_state.get("botao_excluir_3").get("row")]

@@ -89,7 +89,7 @@ class ReadEditDB:
             print(f"Erro na consulta de usuarios: {e}")
             return pd.DataFrame()
     
-    @st.cache_data
+    @st.cache_data(ttl=300)
     def usuarios_read_login(_self, database, table, usuario):
         query = f"""
         SELECT *
@@ -134,7 +134,7 @@ class ReadEditDB:
             print(f"Erro na consulta da tabela {table}: {e}")
             return pd.DataFrame()
         
-    @st.cache_data
+    @st.cache_data(ttl=300)
     def geral_read(_self, database, table):
         query = f"""
         SELECT *

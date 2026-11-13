@@ -1,17 +1,20 @@
 import streamlit as st
+import plotly.express as px
+import plotly.graph_objects as go
 import pandas as pd
+import datetime
+import calendar
 import base64
 import zipfile
 import io
 import os
 
 
+
 def metricas_gerar(position,
                    value,
                    label,
                    delta):
-
-    
     try:
         metric = position.metric(
                 value=value,
@@ -19,15 +22,229 @@ def metricas_gerar(position,
                 border=True,
                 delta=delta,
                 delta_color ='off',
-
     )
         return metric
     except Exception as e:
         st.info(f'Erro para gerar metrica: {e}')
         return None
 
+def grafico_2_runrate(total_orcado,
+                      df_filt_gasto,
+                      lista_cat_orcamentos):
+    try:
+        df_filt_gasto = df_filt_gasto[df_filt_gasto['COD_CATEGORIA'].isin(lista_cat_orcamentos)]
+        df_area = df_filt_gasto.groupby('DATA_PAGAMENTO', as_index=False)['VALOR_PAGO'].sum()
+        df_area = df_area.sort_values('DATA_PAGAMENTO')
+        df_area['VALOR_ACUMULADO'] = df_area['VALOR_PAGO'].cumsum()
+        df_area['DATA_STR'] = df_area['DATA_PAGAMENTO'].dt.strftime('%d/%m/%Y')
 
-@st.cache_data
+        fig_area = px.area(
+            df_area,
+            x='DATA_STR',
+            y='VALOR_ACUMULADO',
+            title="Evolução do Gasto Acumulado no Mês"
+        )
+
+        fig_area.update_traces(
+            line_color='#115975', # Azul escuro semelhante ao teu gráfico de barras
+            fillcolor='rgba(17, 89, 117, 0.15)', # Mesmo azul, mas quase transparente
+            mode='lines+markers', # Adiciona pequenos pontos em cada dia
+            marker=dict(size=6, color='#115975', line=dict(width=1, color='white')),
+            hovertemplate="<b>%{x}</b><br>Gasto Acumulado: R$ %{y:,.2f}<extra></extra>"
+        )
+
+        fig_area.add_hline(
+            y=total_orcado,
+            line_dash="dash",
+            line_color="#e74c3c", # Vermelho de alerta
+            annotation_text=f"Limite do Orçamento: R$ {total_orcado:,.2f}",
+            annotation_position="top left",
+            annotation_font=dict(color="#e74c3c", size=12)
+        )
+
+        fig_area.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            xaxis_title=None,
+            yaxis_title="Valor Acumulado (R$)",
+            margin=dict(t=60, b=40, l=40, r=40),
+            xaxis=dict(
+                showgrid=False,
+                type='category',
+                categoryorder='array',
+                categoryarray=df_area['DATA_STR'].tolist()
+            ),
+            yaxis=dict(
+                showgrid=True,
+                gridcolor='#f0f2f6',
+                zeroline=False
+            )
+        )
+        return fig_area
+    except:
+        return None
+
+
+
+
+def grafico_3_categoria_gasto(df_gasto_categoria,
+                              ):
+    
+    try:
+        figura_grafico_categoria = px.pie(
+            df_gasto_categoria,
+            values='VALOR_PAGO',
+            names='DESCRICAO_SAIDAS',
+            hole=0.55, # Aumentei um pouco o furo para um visual mais elegante
+            title="Gasto por Categoria", # Título alinhado ao estilo do outro gráfico
+            color_discrete_sequence=px.colors.sequential.Peach[2:]
+        )
+
+        figura_grafico_categoria.update_traces(
+            textposition='inside',
+            textinfo='percent',
+            insidetextorientation='horizontal',
+            textfont=dict(size=12, color='white'),
+            marker=dict(line=dict(color='#FFFFFF', width=0.8)),
+            hovertemplate="<b>%{label}</b><br>Valor: R$ %{value:,.2f}<br>Representação: %{percent}<extra></extra>"
+        )
+
+        figura_grafico_categoria.update_layout(
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(t=60, b=20, l=20, r=20),
+            legend_title=None,
+            legend=dict(
+                orientation="v",
+                yanchor="middle",
+                y=0.5,
+                xanchor="left",
+                x=1.05,
+                font=dict(size=12)
+            )
+            )
+        return figura_grafico_categoria
+    except:
+        return None
+
+
+def grafico_4_orcamento_gasto(df_orcamento_gasto_categoria):
+    
+    try:
+        figura_barras_orcamento = px.bar(
+            df_orcamento_gasto_categoria,
+                y='DESCRICAO_SAIDAS',
+                x=['VALOR_ORCAMENTO', 'VALOR_PAGO'], # Orçamento primeiro para ficar no fundo!
+                orientation='h',
+                title='Orçamento vs Gasto',
+                barmode='overlay', # <-- O SEGREDO: Coloca uma barra sobre a outra (sobreposição)
+                text_auto=True,
+                color_discrete_sequence=['#eb5c40', '#F20505']
+        )
+
+        figura_barras_orcamento.update_traces(
+            texttemplate='R$ %{x:,.2f}', 
+            textfont=dict(size=12, color='white'),
+            marker_line_width=0
+        )
+
+        figura_barras_orcamento.data[0].update(
+            textposition='inside',
+            insidetextanchor='end',
+            name='Orçamento'
+        )
+
+        figura_barras_orcamento.data[1].update(
+            textposition='inside',
+            insidetextanchor='start',
+            name='Valor Gasto'
+        )
+
+        figura_barras_orcamento.update_layout(
+            yaxis=dict(
+                title=None,
+                type='category',
+            ),
+            xaxis_title="Valor (R$)",
+            plot_bgcolor='rgba(0,0,0,0)',
+            xaxis=dict(
+                showgrid=True,
+                gridcolor='#e5e5e5',
+                zeroline=True,
+                zerolinecolor='#cccccc'
+            ),
+            legend_title=None,
+            legend=dict(
+                orientation="h", 
+                yanchor="bottom", 
+                y=1.05, 
+                xanchor="right", 
+                x=1
+            ), 
+            margin=dict(t=80, b=40, l=40, r=20)
+        )
+        return figura_barras_orcamento
+    except:
+        return None
+
+
+def grafico_1_gastodia(df_gasto_dia,
+                       paleta_de_cores):
+
+    try:
+        ### GRAFICO BARRAS GASTO/DIA ###
+        fig_barras_dia_pag = px.bar(
+            df_gasto_dia,
+            x='DATA_PAGAMENTO',
+            y='VALOR_PAGO',
+            color='DESCRICAO_TIPO', 
+            barmode='group', 
+            title="Gasto por dia (Por Tipo)",
+            text='VALOR_PAGO',
+            color_discrete_sequence=paleta_de_cores
+        )
+
+        fig_barras_dia_pag.update_traces(
+            textposition='outside',
+            texttemplate='R$ %{text:,.2f}', 
+            textfont=dict(size=12, color='black'),
+            marker_line_width=0
+        )
+
+        fig_barras_dia_pag.update_layout(
+            xaxis=dict(
+                title=None,
+                type='category', # Força a ser categoria
+                categoryorder='array', # Avisa que a ordem virá de uma lista específica
+                categoryarray=df_gasto_dia['DATA_PAGAMENTO'].unique() # Passa as datas na ordem do seu DF ordenado
+            ),
+            yaxis_title="Valor Gasto (R$)",
+            plot_bgcolor='rgba(0,0,0,0)',
+            yaxis=dict(
+                showgrid=True,
+                gridcolor='#e5e5e5',
+                zeroline=True,
+                zerolinecolor='#cccccc'
+            ),
+            legend_title=None,
+            legend=dict(
+                orientation="h", 
+                yanchor="bottom", 
+                y=1.05, 
+                xanchor="right", 
+                x=1
+            ), 
+            margin=dict(t=80, b=40, l=40, r=20)
+        )
+        
+        return fig_barras_dia_pag
+    except:
+        return None
+
+
+
+
+@st.cache_data(ttl=300)
 def gerar_respostas_container (df,
                                ):
     if not df.empty:
